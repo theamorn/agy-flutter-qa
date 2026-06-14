@@ -13,6 +13,6 @@ void main() {
     expect(find.text('Server Status'), findsOneWidget);
     expect(find.text('Status: Active'), findsOneWidget);
     // This key is broken/wrong! The widget has key 'change_status_button'
-    expect(find.byKey(const Key('toggle_status_button')), findsOneWidget);
+    expect(find.byKey(const Key('change_status_button')), findsOneWidget);
   });
 }
