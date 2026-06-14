@@ -40,7 +40,7 @@ class _AppStatusCardState extends State<AppStatusCard> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              key: const Key('toggle_status_button'),
+              key: const Key('change_status_button'),
               onPressed: _toggleStatus,
               child: const Text('Toggle Status'),
             ),
