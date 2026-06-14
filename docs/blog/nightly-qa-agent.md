@@ -46,13 +46,20 @@ To keep token usage and costs fully under control, we divide the responsibilitie
 - **Unit and Widget Tests (Autonomous Agent)**: The agent writes these entirely from scratch. Because unit and widget tests only need local context (a single class or file), the agent can generate them using very few tokens.
 - **Integration Tests (Developer + Agent Self-Healing)**: Developers write the core integration tests because having an agent read the entire codebase to understand end-to-end user flows would consume too many tokens. However, the agent is responsible for **keeping them green**. If an integration test fails (for example, due to a missing widget key after a UI change), the agent steps in to inspect the widget tree, diagnose the failure, and add the missing keys in the UI code to fix it. This targeted self-healing keeps costs extremely cheap while preserving test reliability.
 
-To orchestrate this, we use the **Antigravity CLI**—a keyboard-driven command-line and Terminal User Interface (TUI) harness. Because the CLI is lightweight, requires no GUI, and integrates perfectly with local shell environments, it is the perfect tool to run as a scheduled local cron job on our development machine. Here is its step-by-step workflow:
+To orchestrate this, we use the **Antigravity CLI (`agy`)**—a keyboard-driven command-line and Terminal User Interface (TUI) harness. Because the CLI is lightweight, requires no GUI, and integrates perfectly with local shell environments, it is the perfect tool to run as a scheduled local cron job on our development machine. Here is its step-by-step workflow:
 
 ### Step 1: Pull and Branch
-The agent switches to a dated QA branch so all work happens in isolation:
+The agent switches to a dated QA branch so all work happens in isolation. The script auto-detects the base branch (`develop` if it exists, falling back to `main` or `master` otherwise):
 ```bash
-git fetch origin develop
-git switch develop && git pull --ff-only
+# Detect base branch: develop if exists, otherwise main
+if git show-ref --verify --quiet refs/heads/develop || git show-ref --verify --quiet refs/remotes/origin/develop; then
+  TARGET_BRANCH="develop"
+else
+  TARGET_BRANCH="main"
+fi
+
+git fetch origin "$TARGET_BRANCH"
+git switch "$TARGET_BRANCH" && git pull --ff-only
 git switch -c "qa/auto-$(date +%Y%m%d)"
 ```
 
@@ -91,13 +98,13 @@ xcrun simctl shutdown "iPhone 17"
 If any test fails, it self-heals by analyzing error traces, adjusting the test files, and re-running this verification check until the entire suite is green.
 
 ### Step 6: Push the Branch and Open a PR
-Because this runs locally on your own machine, the agent simply reuses the git and GitHub credentials you're already logged in with—there's no token juggling and no separate "bot" identity. It pushes the dated `qa/auto-*` branch to `origin` and opens a Pull Request against `develop`, so the work shows up under your name for the team to review in the morning:
+Because this runs locally on your own machine, the agent simply reuses the git and GitHub credentials you're already logged in with—there's no token juggling and no separate "bot" identity. It pushes the dated `qa/auto-*` branch (using force-push to support repeated daily runs) and opens a Pull Request against the auto-detected base branch, so the work shows up under your name for the team to review in the morning:
 ```bash
-# 1. Push the nightly branch to the team repo (origin)
-git push origin HEAD
+# 1. Push the nightly branch to the team repo (force-pushing to allow daily updates)
+git push -f origin HEAD
 
-# 2. Open a pull request against the base develop branch
-gh pr create --base develop \
+# 2. Open a pull request against the detected base branch
+gh pr create --base "$TARGET_BRANCH" \
   --title "Nightly QA: add missing tests ($(date +%Y-%m-%d))" \
   --body "Coverage 38.6% → 71.2% (+32.6%). Added: register_bloc, forgot_password_bloc, register_screen. All suites green."
 ```
@@ -278,8 +285,9 @@ Here are the other core methods we use to save tokens with the Google Antigravit
 - **Text-Log and Coverage Parsing**: Instead of asking the agent to look at the whole codebase or screenshots, we read the small `lcov.info` file first. We only give the agent the specific lines and files that have no coverage, making the prompt much smaller.
 - **Incremental Diffing**: By running `git log --since="06:00" --oneline`, the agent knows exactly what code was changed during the day. It only writes tests for those changed files, which keeps the context size small.
 - **Thinking Token Management**: You can check `thoughts_token_count` in `agent.conversation.total_usage` to see how many tokens the model uses for thinking. If it is too high, you can make the system instructions more direct to avoid spending too much money.
-- **CLI Token Auditing**: The Antigravity CLI outputs total token usage metrics (including prompt, candidates, and reasoning/thinking tokens) directly to the console at the end of each session, making it easy to audit and alert on cost regressions in your terminal logs.
+- **CLI Token Auditing**: The `agy` CLI outputs total token usage metrics (including prompt, candidates, and reasoning/thinking tokens) directly to the console at the end of each session, making it easy to audit and alert on cost regressions in your terminal logs.
 - **Caching Schemas and Prompts**: We use context caching for repeated code structures and test patterns. This makes sure prompt tokens are reused, making the cost much cheaper.
+- **Non-Interactive Execution**: For automated scripts, run the `agy` CLI using the `--print` mode, bypass interactive confirmation prompts with the `--dangerously-skip-permissions` flag, and redirect stdin from `/dev/null` (`< /dev/null`) to guarantee the script never hangs waiting for terminal input.
 
 ### Beyond Simple Scripts: Designing a True Self-Improving Loop
 To build a system where the agent gets smarter over time and requires zero developer intervention except for the final merge, three advanced design choices are needed:
@@ -305,7 +313,7 @@ The template is ready in the repository. Configure the **Antigravity CLI** to ru
 # 1. Run unit & widget tests and see the coverage gap on your machine
 flutter test --coverage && lcov --summary coverage/lcov.info
 
-# 2. Run the full nightly workflow locally. Without the Antigravity CLI on your
+# 2. Run the full nightly workflow locally. Without the agy CLI on your
 #    PATH it safely dry-runs (printing the exact prompt it would send the agent);
 #    with it, the agent writes the tests and the script opens the PR.
 ./scripts/nightly_qa.sh
