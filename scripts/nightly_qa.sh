@@ -19,7 +19,7 @@
 #   DEVICE             iOS simulator name               (default: "iPhone 17")
 #   WORK_START         "today's changes" cutoff         (default: 06:00)
 #   MAX_HEAL_ATTEMPTS  self-heal retries before quarantine (default: 3)
-#   ANTIGRAVITY_CLI    command that runs the agent      (default: antigravity)
+#   ANTIGRAVITY_CLI    command that runs the agent      (default: agy)
 #   SKIP_INTEGRATION   set to 1 to skip simulator tests (default: 0)
 #   DRY_RUN            set to 1 to never touch the network/agent (auto-detected)
 
@@ -30,11 +30,18 @@ source "scripts/lib/qa_common.sh"
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-TARGET_BRANCH="${TARGET_BRANCH:-develop}"
+# Detect base branch: develop if exists, otherwise main
+if [ -z "${TARGET_BRANCH:-}" ]; then
+  if git show-ref --verify --quiet refs/heads/develop || git show-ref --verify --quiet refs/remotes/origin/develop; then
+    TARGET_BRANCH="develop"
+  else
+    TARGET_BRANCH="main"
+  fi
+fi
 DEVICE="${DEVICE:-iPhone 17}"
 WORK_START="${WORK_START:-06:00}"
 MAX_HEAL_ATTEMPTS="${MAX_HEAL_ATTEMPTS:-3}"
-ANTIGRAVITY_CLI="${ANTIGRAVITY_CLI:-antigravity}"
+ANTIGRAVITY_CLI="${ANTIGRAVITY_CLI:-agy}"
 SKIP_INTEGRATION="${SKIP_INTEGRATION:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 
@@ -56,7 +63,7 @@ command -v "${ANTIGRAVITY_CLI%% *}" >/dev/null 2>&1 || HAVE_AGENT=0
 
 [ "$HAVE_REMOTE" = 1 ] || warn "No 'origin' remote — skipping fetch/push/PR (template mode)."
 [ "$HAVE_GH" = 1 ]     || warn "'gh' not installed — skipping PR creation (https://cli.github.com)."
-[ "$HAVE_AGENT" = 1 ]  || warn "Antigravity CLI '${ANTIGRAVITY_CLI}' not found — agent steps will dry-run."
+[ "$HAVE_AGENT" = 1 ]  || warn "agy CLI not found — agent steps will dry-run."
 
 # ---------------------------------------------------------------------------
 # run_agent <prompt_file> — hand a prompt to the Antigravity CLI.
@@ -72,8 +79,8 @@ run_agent() {
     dim "------------------------------------------------------------"
     return 0
   fi
-  # The real call. Most CLIs take a prompt file or stdin; tune flags as needed.
-  ${ANTIGRAVITY_CLI} --prompt-file "$prompt_file"
+  # The real call. We pass the prompt via --print and skip permissions prompts.
+  ${ANTIGRAVITY_CLI} --print "$(cat "$prompt_file")" --dangerously-skip-permissions < /dev/null
 }
 
 # ===========================================================================
