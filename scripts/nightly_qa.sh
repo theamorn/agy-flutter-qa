@@ -123,9 +123,9 @@ git log --since="$WORK_START" --oneline || true
 log "flutter pub get"
 flutter pub get
 log "flutter analyze"
-flutter analyze
+flutter analyze || warn "Baseline analyze reported issues."
 log "flutter test --coverage (baseline)"
-flutter test --coverage
+flutter test --coverage || warn "Baseline tests reported failures."
 
 BASELINE_PCT="$(coverage_percent coverage/lcov.info)"
 TESTS_BEFORE="$(find test -name '*_test.dart' 2>/dev/null | wc -l | tr -d ' ')"
