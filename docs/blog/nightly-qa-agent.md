@@ -291,15 +291,15 @@ Here are the other core methods we use to save tokens with the Google Antigravit
 
 ### Real-World Audit: What Does a Run Actually Cost?
 
-To prove the efficiency of this setup, here is the token and cost audit from a real development session on our `agy_flutter` codebase using **Gemini 3.5 Flash** (priced at **$0.075 per 1M input tokens** and **$0.30 per 1M output tokens**):
+To prove the efficiency of this setup, here is the token and cost audit from a real development session on our `agy_flutter` codebase using **Gemini 3.5 Flash** (priced at **$1.50 per 1M input tokens** and **$9.00 per 1M output tokens**):
 
 | Operation / Run | Input Tokens | Output Tokens | Total Tokens | Cost (USD) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Test Generation (Task-187)**: Generated coverage tests for 4 blocs/screens from scratch | ~45,000 | ~15,000 | **60,000** | **$0.008** (0.8¢) |
-| **Incremental Add (Task-247)**: Generated test for new `AppStatusCard` widget | ~15,000 | ~5,000 | **20,000** | **$0.003** (0.3¢) |
-| **Self-Healing Run (Task-291)**: Repaired failing test assertions (fixed a broken button key) | ~3,000 | ~1,600 | **4,600** | **$0.001** (0.1¢) |
+| **Test Generation (Task-187)**: Generated coverage tests for 4 blocs/screens from scratch | ~45,000 | ~15,000 | **60,000** | **$0.203** (20.3¢) |
+| **Incremental Add (Task-247)**: Generated test for new `AppStatusCard` widget | ~15,000 | ~5,000 | **20,000** | **$0.068** (6.8¢) |
+| **Self-Healing Run (Task-291)**: Repaired failing test assertions (fixed a broken button key) | ~3,000 | ~1,600 | **4,600** | **$0.019** (1.9¢) |
 
-For less than **1.2 cents**, the agent generated coverage for 5 major codebase components and successfully self-healed a broken test suite. Running this loop every night ensures zero-maintenance test coverage for less than the price of a single postage stamp per year.
+For less than **29 cents**, the agent generated coverage for 5 major codebase components and successfully self-healed a broken test suite. Running this loop every night ensures zero-maintenance test coverage for a very low cost.
 
 ### Beyond Simple Scripts: Designing a True Self-Improving Loop
 To build a system where the agent gets smarter over time and requires zero developer intervention except for the final merge, three advanced design choices are needed:
