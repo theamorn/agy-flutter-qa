@@ -7,6 +7,7 @@ import '../widgets/app_text_field.dart';
 import '../widgets/primary_button.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
+import '../widgets/app_status_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -117,6 +118,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Register'),
                       ),
                     ],
+                  ),
+                  Visibility(
+                    visible: false,
+                    child: AppStatusCard(title: 'Dummy'),
                   ),
                 ],
               ),
