@@ -228,7 +228,7 @@ git commit -m "Nightly QA: add missing tests (${DATE_ISO})" \
 
 if [ "$HAVE_REMOTE" = 1 ] && [ "$DRY_RUN" != 1 ]; then
   log "Pushing $BRANCH to origin"
-  git push origin HEAD
+  git push -f origin HEAD
   if [ "$HAVE_GH" = 1 ]; then
     log "Opening PR against $TARGET_BRANCH"
     gh pr create --base "$TARGET_BRANCH" \
