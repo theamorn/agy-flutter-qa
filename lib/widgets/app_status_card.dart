@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class AppStatusCard extends StatefulWidget {
   final String title;
 
-  const AppStatusCard({
-    super.key,
-    required this.title,
-  });
+  const AppStatusCard({super.key, required this.title});
 
   @override
   State<AppStatusCard> createState() => _AppStatusCardState();

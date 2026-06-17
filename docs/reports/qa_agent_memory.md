@@ -69,3 +69,7 @@ _(Auto-appended by `scripts/nightly_qa.sh` — newest at the bottom.)_
 ## Run 2026-06-13
 - Coverage: 38.6% → 38.6% (+0.0%)
 - Tests added: 0 · Run time: 1m23s
+
+## Run 2026-06-14
+- Coverage: 41.2% → 85.9% (+44.7%)
+- Tests added: 4 · Run time: 2m30s

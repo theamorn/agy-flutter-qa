@@ -66,4 +66,38 @@ void main() {
       ],
     );
   });
+
+  group('AuthBloc logout', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [unauthenticated] when logout is requested',
+      build: () => AuthBloc(authService: authService),
+      act: (bloc) => bloc.add(const AuthLogoutRequested()),
+      expect: () => [const AuthState(status: AuthStatus.unauthenticated)],
+    );
+  });
+
+  group('AuthEvent', () {
+    test('supports value comparisons', () {
+      expect(
+        const AuthLoginRequested(email: 'email', password: 'password'),
+        equals(const AuthLoginRequested(email: 'email', password: 'password')),
+      );
+      expect(const AuthLogoutRequested(), equals(const AuthLogoutRequested()));
+    });
+  });
+
+  group('AuthState', () {
+    test('supports value comparisons', () {
+      expect(const AuthState(), equals(const AuthState()));
+      expect(const AuthState().isAuthenticated, isFalse);
+      expect(
+        const AuthState(status: AuthStatus.authenticated).isAuthenticated,
+        isTrue,
+      );
+      expect(
+        const AuthState().copyWith(status: AuthStatus.loading),
+        equals(const AuthState(status: AuthStatus.loading)),
+      );
+    });
+  });
 }
